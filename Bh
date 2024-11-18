@@ -1,0 +1,169 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cctype>
+#include <map>
+
+// Funkcja pomocnicza do usunięcia białych znaków
+std::string removeWhitespace(const std::string& str) {
+    std::string result;
+    for (char c : str) {
+        if (!std::isspace(static_cast<unsigned char>(c))) {
+            result += c;
+        }
+    }
+    return result;
+}
+
+// Funkcja pomocnicza do usunięcia znaków z podanego ciągu znaków
+std::string removeCharacters(const std::string& str, const std::string& charsToRemove) {
+    std::string result;
+    for (char c : str) {
+        if (charsToRemove.find(c) == std::string::npos) {
+            result += c;
+        }
+    }
+    return result;
+}
+
+// Funkcja pomocnicza do liczenia białych znaków
+int countWhitespace(const std::string& str) {
+    int count = 0;
+    for (char c : str) {
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// Funkcja pomocnicza do liczenia wystąpień znaków z podanego ciągu znaków
+std::map<char, int> countCharacters(const std::string& str, const std::string& charsToCount) {
+    std::map<char, int> result;
+    for (char c : str) {
+        if (charsToCount.find(c) != std::string::npos) {
+            result[c]++;
+        }
+    }
+    return result;
+}
+
+// Funkcja pomocnicza do zastępowania ciągu znaków X ciągiem Y
+std::string replaceSubstr(const std::string& str, const std::string& oldStr, const std::string& newStr) {
+    std::string result = str;
+    size_t pos = 0;
+    while ((pos = result.find(oldStr, pos)) != std::string::npos) {
+        result.replace(pos, oldStr.length(), newStr);
+        pos += newStr.length();
+    }
+    return result;
+}
+
+// Funkcja do przetwarzania pojedynczej linii na podstawie polecenia
+std::string processLine(const std::string& lineContent, const std::string& command) {
+    if (command.empty()) {
+        return lineContent;
+    }
+
+    std::istringstream commandStream(command);
+    std::string commandType;
+    commandStream >> commandType;
+
+    if (commandType == "remove") {
+        std::string param;
+        if (commandStream >> param) {
+            return removeCharacters(lineContent, param);
+        } else {
+            return removeWhitespace(lineContent);
+        }
+    } else if (commandType == "count") {
+        std::string param;
+        if (commandStream >> param) {
+            auto counts = countCharacters(lineContent, param);
+            std::ostringstream result;
+            for (const char& c : param) {
+                result << c << ":" << counts[c] << " ";
+            }
+            return result.str();
+        } else {
+            return "space:" + std::to_string(countWhitespace(lineContent));
+        }
+    } else if (commandType == "replace") {
+        std::string oldStr, newStr;
+        if (commandStream >> oldStr >> newStr) {
+            return replaceSubstr(lineContent, oldStr, newStr);
+        }
+    }
+
+    // Jeśli nie rozpoznano polecenia, zwracamy oryginalną linię
+    return lineContent;
+}
+
+// Główna funkcja programu
+int main(int argc, char* argv[]) {
+    if (argc != 5) {
+        std::cerr << "Użycie: " << argv[0] << " -i <ścieżka pliku wejściowego> -o <ścieżka pliku wyjściowego>\n";
+        return 1;
+    }
+
+    std::string inputFilePath;
+    std::string outputFilePath;
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-i" && i + 1 < argc) {
+            inputFilePath = argv[++i];
+        } else if (arg == "-o" && i + 1 < argc) {
+            outputFilePath = argv[++i];
+        }
+    }
+
+    if (inputFilePath.empty() || outputFilePath.empty()) {
+        std::cerr << "Brakuje ścieżki pliku wejściowego lub wyjściowego.\n";
+        return 1;
+    }
+
+    std::ifstream inputFile(inputFilePath);
+    if (!inputFile.is_open()) {
+        std::cerr << "Nie można otworzyć pliku wejściowego: " << inputFilePath << "\n";
+        return 1;
+    }
+
+    std::ofstream outputFile(outputFilePath);
+    if (!outputFile.is_open()) {
+        std::cerr << "Nie można otworzyć pliku wyjściowego: " << outputFilePath << "\n";
+        return 1;
+    }
+
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        // Pominięcie pustych linii
+        if (line.empty() || std::all_of(line.begin(), line.end(), isspace)) {
+            continue;
+        }
+
+        // Podział treści linii i polecenia
+        std::string lineContent = line;
+        std::string command;
+        size_t pos = line.find("%");
+        if (pos != std::string::npos) {
+            lineContent = line.substr(0, pos);
+            command = line.substr(pos + 1);
+        }
+
+        // Usunięcie zbędnych spacji z końca treści linii
+        lineContent.erase(lineContent.find_last_not_of(" \t\n\r\f\v") + 1);
+
+        // Przetwarzanie linii i zapis do pliku wyjściowego
+        std::string processedLine = processLine(lineContent, command);
+        outputFile << processedLine << "\n";
+    }
+
+    inputFile.close();
+    outputFile.close();
+
+    return 0;
+}
