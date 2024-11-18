@@ -1,0 +1,38 @@
+Proszę napisać program przyjmujący dwa parametry:
+-i - ścieża pliku wejściowego
+-o - ścieżka pliku wyjściowego
+Program dokonuje pewnego przekształcenia linii z pliku wejściowego (przekształcone zapisuje do pliku wyjściowego).
+Każda linia w pliku wejściowym ma następujący format:
+
+<tresc linii> [% polecenie]
+
+tresc linii to tekst który należy przekształcić i zapisać do pliku wyjściowego. Opcjonalnie po treści linii może wystąpić symbol % po którym występuje jedno z poleceń opisujących transformację linii.
+Możliwe polecenia to:
+
+    remove - powoduje usunięcie wszystkich białych znaków z linii
+    remove xyz - gdzie xyz oznacza dowolny ciąg znaków, jeżeli w linii występuje jakikolwiek z tych znaków ma on być z linii usunięty
+    count - zastępuje całą linię liczbą białych znaków występujących w linii
+    count xyz - znaczenie xyz jak w remove xyz, zastępuje cała linię liczbami występień kolejnych znaków
+    replace X Y - gdzie X i Y to dowolne ciągi znaków, zastępuja każde wystąpienie ciągu znaków X ciągiem Y
+
+Puste (bez znaków, bądź zawierające tylko białe znaki) linie z pliku wejściowego powinny zostać pominięte (niezapisane w pliku wyjściowym).
+
+Przykładowo dla następującego pliku wejściowego:
+
+To jest pierwsza linia% remove
+Ta zostanie bez zmian
+W tej usuniemy samogloski % remove aeyiou
+W 	tej policzymy biale znaki %count
+
+Wyzej byla pusta, w wyjsciu jej nie bedzie % count yewj
+		 
+Wyzej jest znow pusta, ale tym razem z bialymi znakami, tez bedzie pominieta, a slowo bialymi zostanie tutaj zastapione przez czarnymi % replace bialymi czarnymi
+
+Plik wyjściowy powinien wyglądać następująco:
+
+Tojestpierwszalinia
+Ta zostanie bez zmian
+W tj snm smglsk   
+space:5 tab:1 
+y:3 e:5 w:2 j:4 
+Wyzej jest znow pusta, ale tym razem z czarnymi znakami, tez bedzie pominieta, a slowo czarnymi zostanie tutaj za
